@@ -92,12 +92,17 @@ const Contact = {
         return;
       }
 
-      // Keep compatibility with both EmailJS variable naming styles.
-      // Students may use {{name}}/{{email}} or {{from_name}}/{{from_email}} in templates.
-      const nameValue = form.querySelector('input[name="name"]')?.value || '';
-      const emailValue = form.querySelector('input[name="email"]')?.value || '';
-      const subjectValue = form.querySelector('input[name="subject"]')?.value || '';
-      const messageValue = form.querySelector('textarea[name="message"]')?.value || '';
+      // Read from FormData to handle typed and auto-filled inputs consistently.
+      const formData = new FormData(form);
+      const nameValue = String(formData.get('name') || '').trim();
+      const emailValue = String(formData.get('email') || '').trim();
+      const subjectValue = String(formData.get('subject') || '').trim();
+      const messageValue = String(formData.get('message') || '').trim();
+
+      if (!nameValue || !emailValue) {
+        this.showFormStatus(form, 'Please enter both your name and email address.', 'error');
+        return;
+      }
 
       const templateParams = {
         // Common names used in simple templates
@@ -109,7 +114,14 @@ const Contact = {
         from_name: nameValue,
         from_email: emailValue,
         from_subject: subjectValue,
-        reply_to: emailValue
+        reply_to: emailValue,
+        // Additional aliases used by some templates/examples
+        user_name: nameValue,
+        user_email: emailValue,
+        sender_name: nameValue,
+        sender_email: emailValue,
+        fromName: nameValue,
+        fromEmail: emailValue
       };
 
       // Loading state
