@@ -8,17 +8,6 @@ const Contact = {
     return !value || value === 'YOUR_PUBLIC_KEY' || value === 'PROD_EMAILJS_PUBLIC_KEY';
   },
 
-  ensureHiddenField(form, fieldName, fieldValue) {
-    let input = form.querySelector(`input[name="${fieldName}"]`);
-    if (!input) {
-      input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = fieldName;
-      form.appendChild(input);
-    }
-    input.value = fieldValue || '';
-  },
-
   init() {
     this.renderContactInfo();
     this.renderExperience();
@@ -108,11 +97,20 @@ const Contact = {
       const nameValue = form.querySelector('input[name="name"]')?.value || '';
       const emailValue = form.querySelector('input[name="email"]')?.value || '';
       const subjectValue = form.querySelector('input[name="subject"]')?.value || '';
+      const messageValue = form.querySelector('textarea[name="message"]')?.value || '';
 
-      this.ensureHiddenField(form, 'from_name', nameValue);
-      this.ensureHiddenField(form, 'from_email', emailValue);
-      this.ensureHiddenField(form, 'reply_to', emailValue);
-      this.ensureHiddenField(form, 'from_subject', subjectValue);
+      const templateParams = {
+        // Common names used in simple templates
+        name: nameValue,
+        email: emailValue,
+        subject: subjectValue,
+        message: messageValue,
+        // Common names used in EmailJS examples
+        from_name: nameValue,
+        from_email: emailValue,
+        from_subject: subjectValue,
+        reply_to: emailValue
+      };
 
       // Loading state
       btn.disabled = true;
@@ -120,10 +118,10 @@ const Contact = {
 
       try {
         if (typeof emailjs !== 'undefined') {
-          await emailjs.sendForm(
+          await emailjs.send(
             CONFIG.emailjs.serviceId,
             CONFIG.emailjs.templateId,
-            form
+            templateParams
           );
         }
         this.showFormStatus(form, '✓ Message sent successfully! I\'ll get back to you soon.', 'success');
