@@ -45,14 +45,23 @@ echo "💾 Committing files..."
 git add .
 git commit -m "Initial commit - My Personal Portfolio" --quiet
 
-# 5. Create new repository on GitHub and push
-echo "🚀 Creating repository '$REPO_NAME' on your GitHub account..."
-gh repo create "$REPO_NAME" --public --source=. --remote=origin --push
+# 5. Create repo if needed, otherwise connect and push
+GITHUB_USER=$(gh api user -q .login)
+FULL_REPO="$GITHUB_USER/$REPO_NAME"
+
+if gh repo view "$FULL_REPO" >/dev/null 2>&1; then
+    echo "📂 Repository '$FULL_REPO' already exists. Connecting and pushing..."
+    git remote add origin "https://github.com/$FULL_REPO.git" 2>/dev/null || true
+    git push -u origin main
+else
+    echo "🚀 Creating repository '$FULL_REPO' on your GitHub account..."
+    gh repo create "$FULL_REPO" --public --source=. --remote=origin --push
+fi
 
 if [ $? -eq 0 ]; then
-    echo "✅ Repository created and code pushed successfully!"
+    echo "✅ Repository synchronized successfully!"
 else
-    echo "❌ Failed to create repository. It might already exist on your account."
+    echo "❌ Failed to synchronize repository with GitHub."
     exit 1
 fi
 
@@ -73,14 +82,12 @@ if [ -z "$SRV_ID" ]; then read -p "Enter EmailJS Service ID: " SRV_ID; fi
 if [ -z "$TMP_ID" ]; then read -p "Enter EmailJS Template ID: " TMP_ID; fi
 
 echo "Setting secrets in GitHub..."
-gh secret set EMAILJS_PUBLIC_KEY --body "$PUB_KEY"
-gh secret set EMAILJS_SERVICE_ID --body "$SRV_ID"
-gh secret set EMAILJS_TEMPLATE_ID --body "$TMP_ID"
+gh secret set EMAILJS_PUBLIC_KEY --repo "$FULL_REPO" --body "$PUB_KEY"
+gh secret set EMAILJS_SERVICE_ID --repo "$FULL_REPO" --body "$SRV_ID"
+gh secret set EMAILJS_TEMPLATE_ID --repo "$FULL_REPO" --body "$TMP_ID"
 
-# 7. Enable GitHub Actions for Deployment
-echo "🌐 Configuring GitHub Actions and Pages..."
-# Enable Pages with Actions as the source
-gh repo edit "$REPO_NAME" --enable-pages --pages-build-type workflow
+# 7. Trigger deployment using workflow in repository
+echo "🌐 GitHub Actions workflow will handle Pages deployment..."
 
 echo ""
 echo "🎉 SUCCESS! Your secrets are set and your deployment is triggered via GitHub Actions."
