@@ -162,9 +162,9 @@ const CONFIG = {
 
   // ─── EmailJS (for contact form) ─────────────────────────────
   emailjs: {
-    publicKey: "YOUR_PUBLIC_KEY",
-    serviceId: "YOUR_SERVICE_ID",
-    templateId: "YOUR_TEMPLATE_ID"
+    publicKey: "PROD_EMAILJS_PUBLIC_KEY",
+    serviceId: "PROD_EMAILJS_SERVICE_ID",
+    templateId: "PROD_EMAILJS_TEMPLATE_ID"
   },
 
   // ─── Advanced Settings ──────────────────────────────────────

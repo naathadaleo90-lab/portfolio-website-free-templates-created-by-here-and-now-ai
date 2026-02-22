@@ -1,5 +1,5 @@
 # OpenSpec and GitHub directories
-.github/
+!.github/workflows/
 openspec/
 
 # Dependencies
