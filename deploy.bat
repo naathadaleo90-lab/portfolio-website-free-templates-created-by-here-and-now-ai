@@ -1,6 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
 
+set "SKIP_EMAILJS_SECRETS=%SKIP_EMAILJS_SECRETS%"
+for %%A in (%*) do (
+    if /I "%%~A"=="--skip-secrets" set "SKIP_EMAILJS_SECRETS=true"
+)
+if /I "!SKIP_EMAILJS_SECRETS!"=="1" set "SKIP_EMAILJS_SECRETS=true"
+
 :: ╔══════════════════════════════════════════════════════════════╗
 :: ║            PORTFOLIO AUTODEPLOY SCRIPT (Windows)           ║
 :: ║  Automates: Git Init -> GitHub Repo Creation -> Push -> Pages ║
@@ -71,26 +77,34 @@ if !ERRORLEVEL! neq 0 (
 echo ✅ Repository synchronized successfully!
 
 :: 6. Set GitHub Secrets (Automated)
-echo 🔐 Setting up EmailJS secrets...
-if exist .env (
-    for /f "tokens=1,2 delims==" %%i in (.env) do set "%%i=%%j"
+if /I "!SKIP_EMAILJS_SECRETS!"=="true" (
+    echo Skipping EmailJS secret setup (--skip-secrets enabled).
+) else (
+    echo 🔐 Setting up EmailJS secrets...
+    if exist .env (
+        for /f "tokens=1,2 delims==" %%i in (.env) do set "%%i=%%j"
+    )
+
+    :: Use variables from .env or ask if empty
+    if "!EMAILJS_PUBLIC_KEY!"=="" set /p "EMAILJS_PUBLIC_KEY=Enter EmailJS Public Key: "
+    if "!EMAILJS_SERVICE_ID!"=="" set /p "EMAILJS_SERVICE_ID=Enter EmailJS Service ID: "
+    if "!EMAILJS_TEMPLATE_ID!"=="" set /p "EMAILJS_TEMPLATE_ID=Enter EmailJS Template ID: "
+
+    echo Setting secrets in GitHub...
+    gh secret set EMAILJS_PUBLIC_KEY --repo "!FULL_REPO!" --body "!EMAILJS_PUBLIC_KEY!"
+    gh secret set EMAILJS_SERVICE_ID --repo "!FULL_REPO!" --body "!EMAILJS_SERVICE_ID!"
+    gh secret set EMAILJS_TEMPLATE_ID --repo "!FULL_REPO!" --body "!EMAILJS_TEMPLATE_ID!"
 )
-
-:: Use variables from .env or ask if empty
-if "!EMAILJS_PUBLIC_KEY!"=="" set /p "EMAILJS_PUBLIC_KEY=Enter EmailJS Public Key: "
-if "!EMAILJS_SERVICE_ID!"=="" set /p "EMAILJS_SERVICE_ID=Enter EmailJS Service ID: "
-if "!EMAILJS_TEMPLATE_ID!"=="" set /p "EMAILJS_TEMPLATE_ID=Enter EmailJS Template ID: "
-
-echo Setting secrets in GitHub...
-gh secret set EMAILJS_PUBLIC_KEY --repo "!FULL_REPO!" --body "!EMAILJS_PUBLIC_KEY!"
-gh secret set EMAILJS_SERVICE_ID --repo "!FULL_REPO!" --body "!EMAILJS_SERVICE_ID!"
-gh secret set EMAILJS_TEMPLATE_ID --repo "!FULL_REPO!" --body "!EMAILJS_TEMPLATE_ID!"
 
 :: 7. Trigger deployment using workflow in repository
 echo 🌐 GitHub Actions workflow will handle Pages deployment...
 
 echo.
-echo 🎉 SUCCESS! Your secrets are set and your deployment is triggered via GitHub Actions.
+if /I "!SKIP_EMAILJS_SECRETS!"=="true" (
+    echo 🎉 SUCCESS! Deployment is triggered via GitHub Actions (EmailJS secrets skipped).
+) else (
+    echo 🎉 SUCCESS! Your secrets are set and your deployment is triggered via GitHub Actions.
+)
 echo ----------------------------------------------------------
 echo Your website will be live at: https://!GITHUB_USER!.github.io/!REPO_NAME!/
 echo ----------------------------------------------------------
