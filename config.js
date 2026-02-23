@@ -11,8 +11,8 @@
 const CONFIG = {
 
   // ─── Personal Info ───────────────────────────────────────────
-  name: "Ruthran Raghavan",
-  title: "Chief AI Scientist",
+  name: "Arun Prasad",
+  title: "Student of B.Tech IT First Year",
   tagline: "Designing and deploying enterprise-grade AI systems that deliver measurable ROI.",
   roles: ["Chief AI Scientist", "AI Automation Expert", "Multi-Agent Orchestrator", "Corporate Trainer"],
 
